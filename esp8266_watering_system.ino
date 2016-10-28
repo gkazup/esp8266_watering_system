@@ -4,10 +4,9 @@
 #include <MCP3008.h>
 
 // thinger.io config
-#define USER_ID "gkazup"
+#define USER_ID "username"
 #define DEVICE_ID "watering_system"
-#define DEVICE_CREDENTIAL "A(+NlE<:=D#9&K0[u3u@tyK_i"
-#define ALARM_ENDPOINT "alarm_endpoint"
+#define DEVICE_CREDENTIAL "device cred"
 
 // wifi config
 #define WIFI_SSID "your_wifi_ssid"
@@ -20,8 +19,10 @@
 #define CS_PIN 15
 
 // motor pin setup
-#define SENSOR_PIN D1
-#define LED_PIN D2
+#define PUMP0_PIN D1
+#define PUMP1_PIN D2
+#define PUMP2_PIN D3
+#define PUMP3_PIN D4
 
 
 MCP3008 adc(CLOCK_PIN, MOSI_PIN, MISO_PIN, CS_PIN); // configure MCP3008 constructor
@@ -29,10 +30,51 @@ ThingerWifi thing(USER_ID, DEVICE_ID, DEVICE_CREDENTIAL); //configure Thinger co
 
 
 void setup() {
+  // setup pump states
+  pinMode(PUMP0_PIN, OUTPUT);
+    digitalWrite(PUMP0_PIN, LOW);
+  pinMode(PUMP1_PIN, OUTPUT);
+    digitalWrite(PUMP1_PIN, LOW);
+  pinMode(PUMP2_PIN, OUTPUT);
+    digitalWrite(PUMP2_PIN, LOW);
+  pinMode(PUMP3_PIN, OUTPUT);
+    digitalWrite(PUMP3_PIN, LOW);
+  
   // add wifi connection
   thing.add_wifi(WIFI_SSID, WIFI_WPA2_PASSWORD);
 
-  digitalWrite(LED_PIN, LOW); // turn off led alarm
+  thing["pump0"] << [](pson& in){
+    if(in.is_empty()){
+        in = (bool) digitalRead(PUMP0_PIN);
+    }
+    else{
+        digitalWrite(PUMP0_PIN, in ? HIGH : LOW);
+    }
+  }
+  thing["pump1"] << [](pson& in){
+    if(in.is_empty()){
+        in = (bool) digitalRead(PUMP1_PIN);
+    }
+    else{
+        digitalWrite(PUMP1_PIN, in ? HIGH : LOW);
+    }
+  }
+  thing["pump2"] << [](pson& in){
+    if(in.is_empty()){
+        in = (bool) digitalRead(PUMP2_PIN);
+    }
+    else{
+        digitalWrite(PUMP2_PIN, in ? HIGH : LOW);
+    }
+  }
+  thing["pump3"] << [](pson& in){
+    if(in.is_empty()){
+        in = (bool) digitalRead(PUMP3_PIN);
+    }
+    else{
+        digitalWrite(PUMP3_PIN, in ? HIGH : LOW);
+    }
+  }
 
 }
 
