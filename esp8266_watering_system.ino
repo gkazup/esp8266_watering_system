@@ -5,7 +5,7 @@
 
 // thinger.io config
 #define USER_ID "username"
-#define DEVICE_ID "watering_system"
+#define DEVICE_ID "device id"
 #define DEVICE_CREDENTIAL "device cred"
 
 // wifi config
