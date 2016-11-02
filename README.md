@@ -1,2 +1,11 @@
 # esp8266_watering_system
 Internet enabled smal scale watering system based on thinger.io
+
+BOM:
+NodeMcu Lua v3 development board based on esp8288
+4 soil moisture sensors
+4 small water pumps
+free thinger.io account
+
+Each motor is associated with a moisture sensor.
+Sensor data and motor state is sent to thinger.io for visualisation and remote controll
