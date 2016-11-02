@@ -84,36 +84,29 @@ void setup() {
   };
 
   // setup for the pump thingies
-  thing["pump0"] << [](pson& in){
-    if(in.is_empty()) in = (bool) digitalRead(PUMP0_PIN);
-    else digitalWrite(PUMP0_PIN, in ? HIGH : LOW);
-  };
-  thing["pump1"] << [](pson& in){
-    if(in.is_empty()) in = (bool) digitalRead(PUMP1_PIN);
-    else digitalWrite(PUMP1_PIN, in ? HIGH : LOW);
-  };
-  thing["pump2"] << [](pson& in){
-    if(in.is_empty()) in = (bool) digitalRead(PUMP2_PIN);
-    else digitalWrite(PUMP2_PIN, in ? HIGH : LOW);
-  };
-  thing["pump3"] << [](pson& in){
-    if(in.is_empty()) in = (bool) digitalRead(PUMP3_PIN);
-    else digitalWrite(PUMP3_PIN, in ? HIGH : LOW);
+  thing["pump"] << [](pson& in){
+    if(in.is_empty()) {
+      in["0"] = (bool) digitalRead(PUMP0_PIN);
+      in["1"] = (bool) digitalRead(PUMP1_PIN);
+      in["2"] = (bool) digitalRead(PUMP2_PIN);
+      in["3"] = (bool) digitalRead(PUMP3_PIN);
+    }
+    else{
+      digitalWrite(PUMP0_PIN, in["0"] ? HIGH : LOW);
+      digitalWrite(PUMP1_PIN, in["1"] ? HIGH : LOW);
+      digitalWrite(PUMP2_PIN, in["2"] ? HIGH : LOW);
+      digitalWrite(PUMP3_PIN, in["3"] ? HIGH : LOW);
+    }
   };
 
   // setup for the sensor thingies
-  thing["sensor0"] >> [](pson& out){
-    out = sensor0History[0];
+  thing["sensor"] >> [](pson& out){
+    out["0"] = sensor0History[0];
+    out["1"] = sensor1History[0];
+    out["2"] = sensor2History[0];
+    out["3"] = sensor3History[0];
   };
-  thing["sensor1"] >> [](pson& out){
-    out = sensor1History[0];
-  };
-  thing["sensor2"] >> [](pson& out){
-    out = sensor2History[0];
-  };
-  thing["sensor3"] >> [](pson& out){
-    out = sensor3History[0];
-  };
+
 
 }
 
