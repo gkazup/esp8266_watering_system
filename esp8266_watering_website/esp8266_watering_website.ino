@@ -3,8 +3,8 @@
 #include <MCP3008.h>
 
 // wifi config
-#define WIFI_SSID "wifi-ssid"
-#define WIFI_WPA2_PASSWORD "wifi-password"
+#define WIFI_SSID "your_ssid"
+#define WIFI_WPA2_PASSWORD "your_pass"
 
 // SDI pin setup to connect MCP3008
 #define CLOCK_PIN D5
@@ -23,7 +23,7 @@
 
 
 MCP3008 adc(CLOCK_PIN, MOSI_PIN, MISO_PIN, CS_PIN); // configure MCP3008 constructor
-WiFiServer server(80);                              // start webserver
+WiFiServer server(80);
 
 
 int wateringLowThreshold = 500;     // the threshold to start the pump
@@ -37,9 +37,16 @@ int sensor2History[] = {1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 10
 int sensor3History[] = {1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023};
 int sensorHistoryCount = 10;
 
-unsigned long previousMillis = 0;   // last time sensor data was taken
+// pump status array
+int pumps[] = {0,0,0,0};
+
 unsigned long currentMillis = 0;    // current time
-unsigned long delayTime = 10000;    // 10 sec delay between sensor data update
+unsigned long sensorMillis = 0;     // last time sensor data was taken
+unsigned long sensorDelay = 10000;  // 10 sec delay between sensor data update
+unsigned long historyMillis = 0;        // last time history table was updated
+unsigned long historyDelay = 1800000;   // 30 minutes between history update
+unsigned long pumpMillis = 0;       // last time pump status was updated
+unsigned long pumpDelay = 1000;     // 1 sec between pump status update
 
 
 void setup() {
@@ -90,13 +97,26 @@ void loop() {
 
   handleWifi();
 
-  if (currentMillis - previousMillis > delayTime) {
+  if (handlePumps()) {
+    if (currentMillis - pumpMillis > pumpDelay) {
+      updateSensorData();
+      pumpMillis = millis();
+      debugOnSerial();
+    }
+  } else {
+    if (currentMillis - sensorMillis > sensorDelay) {
+      updateSensorData();
+      sensorMillis = millis();
+      debugOnSerial();
+    }
+  }
+
+  if (currentMillis - historyMillis > historyDelay) {
     updateSensorHistory();
-    previousMillis = millis();
-    handlePumps();
-    debugOnSerial();
+    historyMillis = millis();
   }
 }
+
 
 void handleWifi(){
   String request;
@@ -221,20 +241,12 @@ void handleWifi(){
   client.println("</html>");
 }
 
-void updateSensorHistory() {
-  int i;
-  
+void updateSensorData() {
   // enable the sensor current
   digitalWrite(MEASUREMENT_PIN, HIGH);
 
-  // circle the buffer
-  for (i = (sensorHistoryCount-1); i > 0; i--) {
-    sensor0History[i] = sensor0History[i-1];
-    sensor1History[i] = sensor1History[i-1];
-    sensor2History[i] = sensor2History[i-1];
-    sensor3History[i] = sensor3History[i-1];
-  }
-
+  delay(500);
+  
   // read the new values from the sensors
   sensor0History[0] = adc.readADC(0);
   sensor1History[0] = adc.readADC(1);
@@ -245,21 +257,63 @@ void updateSensorHistory() {
   digitalWrite(MEASUREMENT_PIN, LOW);
 }
 
-void handlePumps(){
+void updateSensorHistory() {
+  int i;
+  
+  // circle the buffer
+  for (i = (sensorHistoryCount-1); i > 0; i--) {
+    sensor0History[i] = sensor0History[i-1];
+    sensor1History[i] = sensor1History[i-1];
+    sensor2History[i] = sensor2History[i-1];
+    sensor3History[i] = sensor3History[i-1];
+  }
+}
+
+int handlePumps(){
   // turn on the pump if we are lower than the Low treshold
   // turn off the pump if we are higher than the High treshold
   
-  if (sensor0History[0] < wateringLowThreshold) digitalWrite(PUMP0_PIN, HIGH);
-  if (wateringHighThreshold < sensor0History[0]) digitalWrite(PUMP0_PIN, LOW);
+  if (sensor0History[0] < wateringLowThreshold) {
+    digitalWrite(PUMP0_PIN, HIGH);
+    pumps[0] = 1;
+  }
+  if (wateringHighThreshold < sensor0History[0]) {
+    digitalWrite(PUMP0_PIN, LOW);
+    pumps[0] = 0;
+  }
   
-  if (sensor1History[0] < wateringLowThreshold) digitalWrite(PUMP1_PIN, HIGH);
-  if (wateringHighThreshold < sensor1History[0]) digitalWrite(PUMP1_PIN, LOW);
+  if (sensor1History[0] < wateringLowThreshold) {
+    digitalWrite(PUMP1_PIN, HIGH);
+    pumps[1] = 1;
+  }
+  if (wateringHighThreshold < sensor1History[0]) {
+    digitalWrite(PUMP1_PIN, LOW);
+    pumps[1] = 0;
+  }
 
-  if (sensor2History[0] < wateringLowThreshold) digitalWrite(PUMP2_PIN, HIGH);
-  if (wateringHighThreshold < sensor2History[0]) digitalWrite(PUMP2_PIN, LOW);
+  if (sensor2History[0] < wateringLowThreshold) {
+    digitalWrite(PUMP2_PIN, HIGH);
+    pumps[2] = 1;
+  }
+  if (wateringHighThreshold < sensor2History[0]) {
+    digitalWrite(PUMP2_PIN, LOW);
+    pumps[2] = 0;
+  }
 
-  if (sensor3History[0] < wateringLowThreshold) digitalWrite(PUMP3_PIN, HIGH);
-  if (wateringHighThreshold < sensor3History[0]) digitalWrite(PUMP3_PIN, LOW);
+  if (sensor3History[0] < wateringLowThreshold) {
+    digitalWrite(PUMP3_PIN, HIGH);
+    pumps[3] = 1;
+  }
+  if (wateringHighThreshold < sensor3History[0]) {
+    digitalWrite(PUMP3_PIN, LOW);
+    pumps[3] = 0;
+  }
+
+  if (pumps[0]) return(1);
+  if (pumps[1]) return(1);
+  if (pumps[2]) return(1);
+  if (pumps[3]) return(1);
+  return(0);
 }
 
 void debugOnSerial(){
