@@ -1,5 +1,5 @@
 # esp8266_watering_system
-Internet enabled small scale watering system based on thinger.io
+Internet enabled small scale watering system - local or thinger.io based
 
 BOM:
 - NodeMcu Lua v3 development board based on esp8266,
